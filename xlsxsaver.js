@@ -3,7 +3,7 @@
         window.require = function () { };
     }
     let JSZip = require('jszip');
-    let XlsxCore = require('./xlsxcore');
+    let XlsxCore = require('js-xlsx-core');
     if (typeof global == 'undefined') {
         JSZip = window.JSZip;
         XlsxCore = window.XlsxCore;
