@@ -2,14 +2,25 @@
     if (typeof global == 'undefined') {
         window.require = function () { };
     }
-    let JSZip = require('jszip');
-    let XlsxCore = require('js-xlsx-core');
+    const JSZip = require('jszip');
+    const XlsxCore = require('js-xlsx-core');
     if (typeof global == 'undefined') {
         JSZip = window.JSZip;
         XlsxCore = window.XlsxCore;
     }
-    let Book = XlsxCore.Book;
-    let ShareString = XlsxCore.ShareString;
+    const {
+        Book,
+        Sheet,
+        Cell,
+        ShareString,
+        CellStyle,
+        CellAlignment,
+        NumberFormat,
+        Image,
+        ImageOption,
+        HorizontalAlignment,
+        VerticalAlignment
+    } = XlsxCore;
 
     const _firstTime = new Date(1902, 0, 1).getTime() + (365 * 2 + 2) * 86400000;
 
@@ -32,7 +43,6 @@
      * @returns {JSZip}
      */
     function MakeXlsx(book) {
-        console.log('start');
         var cellStyleMap = {};
         var numberFormatMap = {};
         var shareStringMap = {};
