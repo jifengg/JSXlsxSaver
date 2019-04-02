@@ -1,6 +1,6 @@
 {
   "name": "xlsx-saver",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A xlsx file saver base on JSXlsxCore,can use in node or browser.",
   "main": "xlsxsaver.js",
   "scripts": {
@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/jifengg/JSXlsxSaver#readme",
   "dependencies": {
-    "js-xlsx-core": "^1.0.0"
+    "js-xlsx-core": "^1.0.0",
+    "jszip": "^3.2.1"
   }
 }
