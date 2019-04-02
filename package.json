@@ -1,0 +1,26 @@
+{
+  "name": "xlsx-saver",
+  "version": "1.0.0",
+  "description": "A xlsx file saver base on JSXlsxCore,can use in node or browser.",
+  "main": "xlsxsaver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jifengg/JSXlsxSaver.git"
+  },
+  "keywords": [
+    "xlsx",
+    "xlsxsaver"
+  ],
+  "author": "jifengg",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/jifengg/JSXlsxSaver/issues"
+  },
+  "homepage": "https://github.com/jifengg/JSXlsxSaver#readme",
+  "dependencies": {
+    "js-xlsx-core": "^1.0.0"
+  }
+}
