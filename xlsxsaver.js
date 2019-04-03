@@ -2,8 +2,8 @@
     if (typeof global == 'undefined') {
         window.require = function () { };
     }
-    const JSZip = require('jszip');
-    const XlsxCore = require('js-xlsx-core');
+    let JSZip = require('jszip');
+    let XlsxCore = require('js-xlsx-core');
     if (typeof global == 'undefined') {
         JSZip = window.JSZip;
         XlsxCore = window.XlsxCore;
@@ -304,7 +304,11 @@
                     var imgType = img.Option.Type;
                     var filename = `image${img.__id}.${imgFormat}`;
                     if (imageFileMap[filename] == null) {
-                        zip.file(`xl/media/${filename}`, img.Data);
+                        var zipOpt = {};
+                        if (typeof img.Data == 'string') {
+                            zipOpt.base64 = true;
+                        }
+                        zip.file(`xl/media/${filename}`, img.Data, zipOpt);
                         imageFileMap[filename] = filename;
                     }
                     if (imageFormatMap[imgFormat] == null) {
