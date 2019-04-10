@@ -14,6 +14,8 @@
         Cell,
         ShareString,
         CellStyle,
+        CellFont,
+        CellFill,
         CellAlignment,
         NumberFormat,
         Image,
@@ -31,10 +33,14 @@
         'png': 'image/png',
     }
 
-    var HyperlinkDefaultStyle = {
+    var HyperlinkDefaultFont = {
         Underline: true,
         Color: 10,
         __id: -1,
+    }
+    var HyperlinkDefaultFontNoID = {
+        Underline: true,
+        Color: 10
     }
 
     /**
@@ -48,6 +54,8 @@
         var shareStringMap = {};
         var imageFormatMap = {};
         var imageFileMap = {};
+        var cellFontMap = {};
+        var cellFillMap = {};
 
         var zip = new JSZip();
         zip.file('_rels/.rels',
@@ -125,12 +133,8 @@
 `;
         var drwaingContentTypeXml = ``;
         var stylesXml = ``;
-        var styleFontsXml = makeFontXml(book.DefaultCellStyle);// `<font><sz val="11" /><color theme="1" /><name val="宋体" /><family val="2" /><scheme val="minor" /></font>\n`;
+        var styleFontsXml = makeFontXml(book.DefaultCellStyle.Font);// `<font><sz val="11" /><color theme="1" /><name val="宋体" /><family val="2" /><scheme val="minor" /></font>\n`;
         var styleFontsCount = 1;
-        // if (book.DefaultCellStyle != null) {
-        //     styleFontsXml += makeFontXml(book.DefaultCellStyle);
-        //     styleFontsCount++;
-        // }
         var cellStyleXfs = `<xf numFmtId="0" fontId="${(styleFontsCount - 1)}" fillId="0" borderId="0" />\n`;
         var cellStylexfsCount = 1;
         var cellXfs = `<xf numFmtId="0" fontId="${(styleFontsCount - 1)}" fillId="0" borderId="0" xfId="0" />\n`;
@@ -147,9 +151,9 @@
         var sheetCount = 0;
         var drawingCount = 0;
         var sheetRelsId = 0;
-        for (var sheetName in book.Sheets) {
+        for (var sheet of book.Sheets) {
             sheetCount++;
-            var sheet = book.Sheets[sheetName];
+            sheetName = sheet.Name;
             var sheetXml =
                 `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac">
@@ -176,59 +180,88 @@
                     if (cell.Text != null) {
                         var s = null;
                         var link = cell.Hyperlink;
-                        var hStyle = link ? (link.Style || HyperlinkDefaultStyle) : null;
                         var style = cell.Style;
-                        //合并超链接样式和单元格样式，以超链接样式覆盖单元格样式
-                        if (hStyle != null) {
+                        if (link != null) {
                             if (style == null) {
-                                style = hStyle;
+                                style = {};
+                            }
+                            if (style.Font == null) {
+                                style.Font = HyperlinkDefaultFont;
                             } else {
-                                if (hStyle == HyperlinkDefaultStyle) {
-                                    hStyle = Object.assign({}, HyperlinkDefaultStyle);
-                                    //如果超链接为默认样式，则合并前删除id，以免直接使用样式id造成单元格样式丢失
-                                    delete hStyle.__id;
-                                }
-                                style = Object.assign(style || {}, hStyle || {});
+                                style.Font = Object.assign(HyperlinkDefaultFontNoID, style.Font);
                             }
                         }
                         if (style != null) {
-                            var fid = 0;
-                            var format = style.Format;
-                            if (format != null) {
-                                var formatID = format.__id;
-                                if (formatID != null && numberFormatMap[formatID] != null) {
-                                    fid = numberFormatMap[formatID];
-                                } else {
-                                    numberFormatCount++;
-                                    fid = fidOffset + numberFormatCount;
-                                    numberFormatXml += `<numFmt numFmtId="${fid}" formatCode="${format.Code}" />\n`;
-                                }
-                            }
                             var styleID = style.__id;
                             //如果样式是公用的且已经添加了
                             if (styleID != null && cellStyleMap[styleID] != null) {
                                 s = cellStyleMap[styleID];
                             } else {
-                                var oneFont = makeFontXml(style);
-                                styleFontsXml += oneFont;
-                                styleFontsCount++;
+                                //数字格式化
+                                var numFmtId = 0;
+                                var format = style.Format;
+                                if (format != null) {
+                                    var formatID = format.__id;
+                                    if (formatID != null && numberFormatMap[formatID] != null) {
+                                        numFmtId = numberFormatMap[formatID];
+                                    } else {
+                                        numberFormatCount++;
+                                        numFmtId = fidOffset + numberFormatCount;
+                                        numberFormatXml += `<numFmt numFmtId="${numFmtId}" formatCode="${format.Code}" />\n`;
+                                        if (formatID != null) {
+                                            numberFormatMap[formatID] = numFmtId;
+                                        }
+                                    }
+                                }
+                                //字体
+                                var fontid = 0;
+                                var font = style.Font;
+                                if (font != null) {
+                                    var tempFontID = font.__id;
+                                    if (tempFontID != null && cellFontMap[tempFontID] != null) {
+                                        fontid = cellFontMap[tempFontID];
+                                    } else {
+                                        var oneFont = makeFontXml(font);
+                                        if (oneFont != '<font></font>\n') {
+                                            styleFontsXml += oneFont;
+                                            styleFontsCount++;
+                                            fontid = styleFontsCount - 1;
+                                        }
+                                        if (tempFontID != null) {
+                                            cellFontMap[tempFontID] = fontid;
+                                        }
+                                    }
+                                }
+                                //填充
+                                var fillid = 0;
+                                var fill = style.Fill;
+                                if (fill != null) {
+                                    var tempFillID = fill.__id;
+                                    if (tempFillID != null && cellFillMap[tempFillID] != null) {
+                                        fillid = cellFillMap[tempFillID];
+                                    } else {
+                                        fillXml += ` <fill><patternFill patternType="solid"><fgColor rgb="${fill.BGColor}" /></patternFill></fill>`;
+                                        fillCount++;
+                                        fillid = fillCount - 1;
+                                        if (tempFillID != null) {
+                                            cellFillMap[tempFillID] = fillid;
+                                        }
+                                    }
+                                }
 
+                                //对齐
                                 var alignment = null;
                                 if (style.Alignment != null) {
                                     var align = style.Alignment;
                                     alignment = `<alignment${(align.WrapText ? ' wrapText="1"' : '')}${(align.Horizontal ? ` horizontal="${align.Horizontal}"` : '')}${(align.Vertical ? ` vertical="${align.Vertical}"` : '')} />`;
                                 }
-                                var fillid = 0;
-                                if (style.BGColor != null) {
-                                    fillXml += ` <fill><patternFill patternType="solid"><fgColor rgb="${style.BGColor}" /></patternFill></fill>`;
-                                    fillCount++;
-                                    fillid = fillCount - 1;
-                                }
-                                cellXfs += `<xf numFmtId="${fid}" fontId="${(styleFontsCount - 1)}" fillId="${fillid}" borderId="0" xfId="0" applyFont="1"${(fillid > 0 ? ' applyFill="1"' : '')}${(alignment ? ' applyAlignment="1"' : '')}>${alignment || ''}</xf>\n`;
+                                cellXfs += `<xf numFmtId="${numFmtId}" fontId="${fontid}" fillId="${fillid}" borderId="0" xfId="0" ${(fontid > 0 ? ' applyFont="1"' : '')}${(numFmtId > 0 ? ' applyNumberFormat="1"' : '')}${(fillid > 0 ? ' applyFill="1"' : '')}${(alignment ? ' applyAlignment="1"' : '')}>${alignment || ''}</xf>\n`;
 
                                 cellXfsCount++;
                                 s = cellXfsCount - 1;
-                                cellStyleMap[styleID] = s;
+                                if (styleID != null) {
+                                    cellStyleMap[styleID] = s;
+                                }
                             }
                         }
                         var isString = false;

@@ -78,3 +78,10 @@ var test = async () => {
 
 test();
 ```
+
+
+# best practice 最佳实践
+
+- 查看[`Demo`](https://github.com/jifengg/JSXlsxDemo)获得更多使用方式；
+- 在xlsx中，当你有一个文本需要在多个单元格中显示时，可以使用`Book.prototype.CreateShareString()`获得一个`共享文本`，多处使用时对文件体积的影响微乎其微。可以在Demo中运行`node shareStringDemo.js`查看两个输出文件的大小进行比较；
+- 不要修改任何下划线开头的变量，会造成不可预估的错误。
