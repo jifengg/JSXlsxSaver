@@ -153,7 +153,7 @@
         var sheetRelsId = 0;
         for (var sheet of book.Sheets) {
             sheetCount++;
-            sheetName = sheet.Name;
+            var sheetName = HtmlEncodeByRegExp(sheet.Name);
             var sheetXml =
                 `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac">
@@ -166,7 +166,7 @@
  <sheetFormatPr defaultRowHeight="${sheet.DefaultHeight}" customHeight="1" defaultColWidth="${sheet.DefaultWidth}" customWidth="1" x14ac:dyDescent="0.15" />`;
             sheetXmlRels = ``;
             var sheetDataXml = ``;
-            workbookXml += `<sheet name="${sheet.Name}" sheetId="${sheetCount}" r:id="${sheet.id}" />\n`;
+            workbookXml += `<sheet name="${sheetName}" sheetId="${sheetCount}" r:id="${sheet.id}" />\n`;
             workbookXmlRels += `<Relationship Id="${sheet.id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${sheetCount}.xml" />\n`
             ContentTypesXml += `<Override PartName="/xl/worksheets/sheet${sheetCount}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml" />\n`;
             hyperlinksXml = ``;
@@ -281,7 +281,7 @@
                         if (typeof (currentTxt) == 'string') {
                             //如果不是共用文本，或者共用文本还没有添加到列表中，则添加到列表中
                             if (currentShareStringIndex == null) {
-                                shareStringXml += `<si><t>${currentTxt}</t></si>\n`;
+                                shareStringXml += `<si><t>${HtmlEncodeByRegExp(currentTxt)}</t></si>\n`;
                                 currentShareStringIndex = shareStringIndex;
                                 shareStringIndex++;
                                 shareStringMap[strID] = currentShareStringIndex;
@@ -495,4 +495,28 @@ ${numberFormatCount > 0 ? `<numFmts count="${numberFormatCount}">\n${numberForma
             + (style.Color ? `<color ${typeof style.Color == 'number' ? `theme` : `rgb`}="${style.Color}" />` : '')
             + '</font>\n';
     }
+    /*用正则表达式实现html转码*/
+    function HtmlEncodeByRegExp(str) {
+        var s = "";
+        if (str.length == 0) return "";
+        s = str.replace(/&/g, "&amp;");
+        s = s.replace(/</g, "&lt;");
+        s = s.replace(/>/g, "&gt;");
+        s = s.replace(/ /g, "&nbsp;");
+        s = s.replace(/\'/g, "&#39;");
+        s = s.replace(/\"/g, "&quot;");
+        return s;
+    }
+    /*4.用正则表达式实现html解码
+    htmlDecodeByRegExp:function (str){  
+          var s = "";
+          if(str.length == 0) return "";
+          s = str.replace(/&amp;/g,"&");
+          s = s.replace(/&lt;/g,"<");
+          s = s.replace(/&gt;/g,">");
+          s = s.replace(/&nbsp;/g," ");
+          s = s.replace(/&#39;/g,"\'");
+          s = s.replace(/&quot;/g,"\"");
+          return s;  
+    }*/
 })();
